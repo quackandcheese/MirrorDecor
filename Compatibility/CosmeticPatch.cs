@@ -12,12 +12,13 @@ using UnityEngine;
 
 namespace MirrorDecor.Compatibility
 {
-    [HarmonyPatch(typeof(HUDManager), "AddPlayerChatMessageClientRpc")]
+    [HarmonyPatch]
     class CosmeticPatch
     {
-        static void Postfix()
+        [HarmonyPatch(typeof(HUDManager), "AddTextMessageClientRpc")]
+        static void Postfix(string chatMessage)
         {
-            if (Chainloader.PluginInfos.ContainsKey("me.swipez.melonloader.morecompany"))
+            if (chatMessage.StartsWith("[morecompanycosmetics]") && Chainloader.PluginInfos.ContainsKey("me.swipez.melonloader.morecompany"))
             {
                 MoreCompanyPatch();
             }
