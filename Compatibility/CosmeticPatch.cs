@@ -1,66 +1,30 @@
-﻿using BepInEx.Bootstrap;
-using GameNetcodeStuff;
-using HarmonyLib;
+﻿using HarmonyLib;
 using MoreCompany.Cosmetics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+using MoreCompany;
 
 namespace MirrorDecor.Compatibility
 {
-    [HarmonyPatch]
     class CosmeticPatch
     {
-        [HarmonyPatch(typeof(HUDManager), "AddTextMessageClientRpc")]
-        static void Postfix(string chatMessage)
+        [HarmonyPatch(typeof(CosmeticApplication), "UpdateAllCosmeticVisibilities")]
+        [HarmonyPostfix]
+        [HarmonyWrapSafe]
+        private static void Postfix(CosmeticApplication __instance, bool isLocalPlayer)
         {
-            if (chatMessage.StartsWith("[morecompanycosmetics]") && Chainloader.PluginInfos.ContainsKey("me.swipez.melonloader.morecompany"))
+            if (__instance.parentType != ParentType.Player)
+                return;
+            if (!isLocalPlayer)
+                return;
+            if (!MainClass.cosmeticsSyncOther.Value)
+                return;
+
+            foreach (var spawnedCosmetic in __instance.spawnedCosmetics)
             {
-                MoreCompanyPatch();
-            }
-        }
+                if (spawnedCosmetic.cosmeticType == CosmeticType.HAT && __instance.detachedHead)
+                    continue;
 
-        // seperate method without inlining to avoid throwing errors on chat message
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void MoreCompanyPatch()
-        {
-            CosmeticApplication app = GameObject.FindObjectOfType<CosmeticApplication>();
-
-            if (CosmeticRegistry.locallySelectedCosmetics.Count > 0 && app.spawnedCosmetics.Count <= 0)
-            {
-                foreach (string id in CosmeticRegistry.locallySelectedCosmetics)
-                {
-                    app.ApplyCosmetic(id, true);
-                }
-
-                foreach (CosmeticInstance instance in app.spawnedCosmetics)
-                {
-                    instance.transform.localScale *= 0.38f;
-                    SetAllChildrenLayer(instance.transform, 23);
-                }
-            }
-        }
-
-        private static void SetAllChildrenLayer(Transform transform, string layerName)
-        {
-            int layer = LayerMask.NameToLayer(layerName);
-            transform.gameObject.layer = layer;
-            foreach (Transform child in transform)
-            {
-                SetAllChildrenLayer(child, layerName);
-            }
-        }
-
-        private static void SetAllChildrenLayer(Transform transform, int layer)
-        {
-            transform.gameObject.layer = layer;
-            foreach (Transform child in transform)
-            {
-                SetAllChildrenLayer(child, layer);
+                spawnedCosmetic.gameObject.SetActive(true);
+                CosmeticRegistry.RecursiveLayerChange(spawnedCosmetic.transform, 23);
             }
         }
     }

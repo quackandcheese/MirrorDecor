@@ -17,6 +17,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Audio;
 using System.Runtime.CompilerServices;
+using MirrorDecor.Compatibility;
 using static UnityEngine.Rendering.DebugUI;
 
 namespace MirrorDecor
@@ -77,6 +78,18 @@ namespace MirrorDecor
 
             Harmony harmony = new Harmony(ModGUID);
             harmony.PatchAll();
+
+            if (Chainloader.PluginInfos.ContainsKey("me.swipez.melonloader.morecompany"))
+            {
+                try
+                {
+                    harmony.PatchAll(typeof(CosmeticPatch));
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex);
+                }
+            }
 
             MirrorDecor.Config.Load();
             RegisterItems();
