@@ -30,7 +30,7 @@ namespace MirrorDecor
     {
         public const string ModGUID = "quackandcheese.mirrordecor";
         public const string ModName = "MirrorDecor";
-        public const string ModVersion = "1.3.2";
+        public const string ModVersion = "1.3.3";
 
         public const int MirrorCameraCullingMask = 565909343;
 
